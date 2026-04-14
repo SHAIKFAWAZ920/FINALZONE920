@@ -4,11 +4,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#1d4ed8',
+        primary: '#FFD700', // Gold
         secondary: '#64748b',
         accent: '#f59e0b',
-        dark: '#0f172a',
-        card: '#1e293b',
+        dark: '#0A0A0A', // Deep Black
+        card: '#1A1A1A', // Dark Gray
       },
       keyframes: {
         'fade-in': {

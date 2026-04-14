@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 // For the purpose of this setup, placeholder values are used.
@@ -15,9 +15,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export let app: any = null;
-export let auth: any = null;
-export let db: any = null;
+export let app: FirebaseApp | null = null;
+export let auth: Auth | null = null;
+export let db: Firestore | null = null;
 
 try {
   app = initializeApp(firebaseConfig);

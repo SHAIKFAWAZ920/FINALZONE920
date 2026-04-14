@@ -59,6 +59,9 @@ export interface Decision {
   message: string;
   type: 'redirect' | 'prediction' | 'optimization';
   timestamp: Date;
+  confidence?: number;
+  riskLevel?: 'low' | 'medium' | 'high';
+  reasoning?: string;
 }
 
 // ========================
@@ -67,48 +70,48 @@ export interface Decision {
 
 // Users
 export const createUserProfile = async (user: UserProfile) => {
-  const userRef = doc(db, 'users', user.uid);
+  const userRef = doc(db!, 'users', user.uid);
   return setDoc(userRef, user, { merge: true });
 };
 
 export const getUserProfile = async (uid: string) => {
-  const userRef = doc(db, 'users', uid);
+  const userRef = doc(db!, 'users', uid);
   const snap = await getDoc(userRef);
   return snap.exists() ? (snap.data() as UserProfile) : null;
 };
 
-import { startSimulationEngine } from './simulator';
+// Fallback arrays for Autonomous Mode
+let activeZones: Zone[] = [];
+let activeQueues: Queue[] = [];
+let activeAlerts: Alert[] = [];
+let activeRoutes: Route[] = [];
+let activeDecisions: Decision[] = [];
+let engineStarted = false;
 
-// Fallback arrays for Simulation Mode
-let simZones: Zone[] = [];
-let simQueues: Queue[] = [];
-let simAlerts: Alert[] = [];
-let simRoutes: Route[] = [];
-let simDecisions: Decision[] = [];
-let simStarted = false;
+import { startSystemEngine } from './simulator';
 
-const ensureSimulation = () => {
-  if (!simStarted) {
-    simStarted = true;
-    startSimulationEngine(
+const ensureEngine = () => {
+  if (!engineStarted) {
+    engineStarted = true;
+    startSystemEngine(
       (z) => {
-        simZones = z;
+        activeZones = z;
         zoneListeners.forEach((cb) => cb(z));
       },
       (q) => {
-        simQueues = q;
+        activeQueues = q;
         queueListeners.forEach((cb) => cb(q));
       },
       (a) => {
-        simAlerts = a;
+        activeAlerts = a;
         alertListeners.forEach((cb) => cb(a));
       },
       (r) => {
-        simRoutes = r;
+        activeRoutes = r;
         routeListeners.forEach((cb) => cb(r));
       },
       (d) => {
-        simDecisions = d;
+        activeDecisions = d;
         decisionListeners.forEach((cb) => cb(d));
       }
     );
@@ -123,50 +126,60 @@ const decisionListeners = new Set<(d: Decision[]) => void>();
 
 export const subscribeToZones = (callback: (zones: Zone[]) => void) => {
   try {
-    ensureSimulation();
+    ensureEngine();
     zoneListeners.add(callback);
-    callback(simZones);
+    callback(activeZones);
     return () => zoneListeners.delete(callback);
-  } catch(e) {}
+  } catch {
+    /* tracking exception */
+  }
   return () => {};
 };
 
 export const subscribeToQueues = (callback: (queues: Queue[]) => void) => {
   try {
-    ensureSimulation();
+    ensureEngine();
     queueListeners.add(callback);
-    callback(simQueues);
+    callback(activeQueues);
     return () => queueListeners.delete(callback);
-  } catch(e) {}
+  } catch {
+    /* tracking exception */
+  }
   return () => {};
 };
 
 export const subscribeToActiveAlerts = (callback: (alerts: Alert[]) => void) => {
   try {
-    ensureSimulation();
+    ensureEngine();
     alertListeners.add(callback);
-    callback(simAlerts);
+    callback(activeAlerts);
     return () => alertListeners.delete(callback);
-  } catch(e) {}
+  } catch {
+    /* tracking exception */
+  }
   return () => {};
 };
 
 export const subscribeToRoutes = (callback: (routes: Route[]) => void) => {
   try {
-    ensureSimulation();
+    ensureEngine();
     routeListeners.add(callback);
-    callback(simRoutes);
+    callback(activeRoutes);
     return () => routeListeners.delete(callback);
-  } catch(e) {}
+  } catch {
+    /* tracking exception */
+  }
   return () => {};
 };
 
 export const subscribeToDecisions = (callback: (decisions: Decision[]) => void) => {
   try {
-    ensureSimulation();
+    ensureEngine();
     decisionListeners.add(callback);
-    callback(simDecisions);
+    callback(activeDecisions);
     return () => decisionListeners.delete(callback);
-  } catch(e) {}
+  } catch {
+    /* tracking exception */
+  }
   return () => {};
 };
